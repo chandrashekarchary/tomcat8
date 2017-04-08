@@ -1,0 +1,40 @@
+- name: Creates directory
+  file: path=/opt/tomcat state=directory
+
+- name: install epel-release
+  yum: name=epel-release state=present
+
+- name: install required packages
+  yum: name={{item}} state=present
+  with_items:
+    - java
+    - maven
+    - git
+    - java-1.8.0-openjdk-devel.x86_64
+    - mariadb-server
+
+- name: tomcat install
+  get_url: url=http://redrockdigimark.com/apachemirror/tomcat/tomcat-8/v8.5.13/bin/apache-tomcat-8.5.13.tar.gz
+           dest=/opt/tomcat
+
+- name: extract files
+  unarchive: copy=no src=/opt/tomcat/apache-tomcat-8.5.13.tar.gz  dest=/opt/tomcat
+
+- name: file cpoy
+  template: src=/root/catalina  dest=/etc/systemd/system/tomcat.service
+
+#- name: service start
+#  service: name=tomcat state=started enabled=yes
+
+- name: bash tomcat start
+  command: /opt/tomcat/apache-tomcat-8.5.13/bin/startup.sh
+
+- name: user xml
+  template: src=/root/users.xml dest=/opt/tomcat/conf
+
+- name: polyglot war file move
+  copy: src=/root/Polyglot.war dest=/opt/tomcat/apache-tomcat-8.5.13/webapps
+
+- name: mvn package
+  command: /opt/tomcat/apache-tomcat-8.5.13/webapps/mvn package
+
